@@ -352,6 +352,8 @@ void setTableOutputMode(int mode){
         tableMode = ONE_BYTE_ENC;
     else if (mode == TWO_BYTE_ENC)
         tableMode = TWO_BYTE_ENC;
+    else if (mode == COMP_ENG)
+        tableMode = COMP_ENG;
     else{
         printf("Invalid Table Output Mode, defaulting to TWO_BYTE_ENC.\n");
         tableMode = TWO_BYTE_ENC;

@@ -159,6 +159,7 @@ int convertPSXText(char* strIn, char** strOut, int len, int* lenOut){
 		int tlen = 0;
 		input = (unsigned char)strIn[offset];
 		inputNext = (unsigned char)strIn[offset+1];
+        //printf("%#04x %d\n", input, offset);
 
 		if (input == 0x0){
 			offset++;  //maybe this re-enables control codes?
@@ -173,6 +174,13 @@ int convertPSXText(char* strIn, char** strOut, int len, int* lenOut){
 			break;
 		}
 
+
+        // Space?
+        if (input == 0xF9 && inputNext == 0x05) {
+            ptarget[out_offset++] = ' ';
+            offset += 2;
+            continue;
+        }
 
 
 		if (enableCtrlCodes){
@@ -245,8 +253,8 @@ int convertPSXText(char* strIn, char** strOut, int len, int* lenOut){
 				ptarget[out_offset++] = 0x00;
 				ptarget[out_offset++] = 0xFF;
 				ptarget[out_offset++] = 0x03;
-				ptarget[out_offset++] = 0xFF;
-				ptarget[out_offset++] = 0xFF;
+				//ptarget[out_offset++] = 0xFF;
+				//ptarget[out_offset++] = 0xFF;
 				offset++;
 				break;
 			}

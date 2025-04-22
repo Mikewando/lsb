@@ -469,6 +469,7 @@ int writeBinScript(FILE* outFile){
 				else
 					subtitle_hack = 0;
 
+                int extended = 0;
                 rpNode = pNode->runParams;
                 while (rpNode != NULL) {
 
@@ -499,9 +500,15 @@ int writeBinScript(FILE* outFile){
                         /**********************/
                         case SHOW_PORTRAIT_LEFT:
                         {
-                            unsigned short portraitCode;
-                            portraitCode = 0xFA00 | ((unsigned short)rpNode->value);
-                            writeSW(portraitCode);
+                            //unsigned short portraitCode;
+                            //portraitCode = 0xFA00 | ((unsigned short)rpNode->value);
+                            //writeSW(portraitCode);
+                            if (extended) {
+                                writeBYTE(0x00);
+                                extended = 0;
+                            }
+                            writeBYTE(0xFA);
+                            writeBYTE(rpNode->value);
                         }
                         break;
                     
@@ -510,6 +517,10 @@ int writeBinScript(FILE* outFile){
                         /***********************/
                         case SHOW_PORTRAIT_RIGHT:
                         {
+                            if (extended) {
+                                writeBYTE(0x00);
+                                extended = 0;
+                            }
                             unsigned short portraitCode;
                             portraitCode = 0xFB00 | ((unsigned short)rpNode->value);
                             writeSW(portraitCode);
@@ -521,6 +532,10 @@ int writeBinScript(FILE* outFile){
                         /**************/
                         case TIME_DELAY:
                         {
+                            if (extended) {
+                                writeBYTE(0x00);
+                                extended = 0;
+                            }
                             unsigned short timedelay;
                             timedelay = 0xF800 | ((unsigned short)rpNode->value);
                             writeSW(timedelay);
@@ -551,6 +566,11 @@ int writeBinScript(FILE* outFile){
                                 break;
                             }
 
+                            if (G_table_mode == COMP_ENG && !extended) {
+                                writeBYTE(0x0E);
+                                extended = 1;
+                            }
+
                             while (*pText != '\0'){
                                 int numBytes;
                                 unsigned char code;
@@ -563,9 +583,14 @@ int writeBinScript(FILE* outFile){
                                 memcpy(tmp, pText, numBytes);
 
                                 /* Look up associated code */
-                                if ((numBytes == 1) && (*pText == ' ')){
-                                    writeSW(0xF905); /* Space */
-                                }
+                                //if ((numBytes == 1) && (*pText == ' ')){
+                                //    //writeSW(0xF905); /* Space */
+                                //    //writeBYTE(0x00);
+                                //    writeBYTE(0xF9); /* Space */
+                                //    writeBYTE(0x05); /* Space */
+                                //    //writeBYTE(0x0E);
+                                //}
+                                if (0) {}
                                 else{
                                     if (G_table_mode == ONE_BYTE_ENC){
                                         if (getUTF8code_Byte(tmp, &code) < 0){
@@ -587,6 +612,15 @@ int writeBinScript(FILE* outFile){
                                         writeSW(scode);
                                     }
 
+                                    else if (G_table_mode == COMP_ENG){
+                                        int z;
+
+                                        /* Write the data to the output file */
+                                        for (z = 0; z < numBytes; z++){
+                                            writeBYTE(tmp[z] - 0x1F);
+                                        }
+                                    }
+
                                     else{   //Straight UTF-8 Encoding
                                         int z;
 
@@ -605,7 +639,42 @@ int writeBinScript(FILE* outFile){
                         /* control-code */
                         /****************/
                         case CTRL_CODE:
-                            writeSW((unsigned short)rpNode->value);
+                            //writeSW((unsigned short)rpNode->value);
+                            unsigned short tmp = (unsigned short)rpNode->value;
+                            //printf("%#06x\n", tmp);
+
+                            switch (tmp)
+                            {
+                            case 0xff00:
+                                // FIXME oof, would prefer to avoid this back and forth translation for psx/remaster
+                                if (rpNode->pNext && rpNode->pNext->type == CTRL_CODE) {
+                                    unsigned short tmpN = (unsigned short)rpNode->pNext->value;
+                                    if (tmpN == 0xff01) {
+                                        writeBYTE(0x0b);
+                                        rpNode = rpNode->pNext;
+                                        break;
+                                    } else if (tmpN == 0xff03) {
+                                        writeBYTE(5);
+                                        rpNode = rpNode->pNext;
+                                        break;
+                                    }
+                                }
+                                writeBYTE(6);
+                                break;
+                            case 0xff01:
+                                writeBYTE(0x3f);
+                                break;
+                            case 0xff02: // newline
+                                writeBYTE(0x21);
+                                break;
+                            case 0xff03:
+                                writeBYTE(0x3d);
+                                break;
+                            default:
+                                writeBYTE(tmp >> 8);
+                                writeBYTE(tmp);
+                                break;
+                            }
                             break;
 
 

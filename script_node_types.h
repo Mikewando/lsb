@@ -18,6 +18,7 @@
 #define ONE_BYTE_ENC 1
 #define UTF8_ENC     2 /* Not Supported */
 #define UTF8_ENC_ENG 3 /* Not Supported */
+#define COMP_ENG     4
 
 /* Default Fill Byte Value */
 #define DEFAULT_FILL  0x00

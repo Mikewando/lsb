@@ -43,6 +43,7 @@ int parseCmdSeq_RE_Eng(int offset, FILE** ptr_inFile, int singleRunFlag);
 /* Outputs: 0 on Pass, -1 on Fail.                                           */
 /*****************************************************************************/
 int decodeBinaryScript_RE_Eng(FILE* inFile, FILE* outFile){
+    setBinOutputMode(LUNAR_LITTLE_ENDIAN);
 
     unsigned short ptrVal;
     unsigned int iFileSizeBytes;
@@ -113,7 +114,6 @@ int decodeBinaryScript_RE_Eng(FILE* inFile, FILE* outFile){
             printf("Error Reading Pointer Value\n");
             return -1;
         }
-        //No word-swap for PSX
 
         //Verify validity
         byteOffset = (unsigned int)ptrVal * 2;
@@ -402,15 +402,6 @@ case 0x0065: /*REMASTER*/
                 for (z = 0; z < (int)sNode->num_parameters; z++){
                     params[z].type = SHORT_PARAM;
                     params[z].value = pShort[z];
-
-					if ((cmd == 0x1F) || (cmd == 0x2A) || (cmd == 0x2E) || (cmd == 0x47) || (cmd == 0x45) || 
-						(cmd == 0x52) || (cmd == 0x5A) || (cmd == 0x30) || (cmd == 0x29) || (cmd == 0x28)
-						|| (cmd == 0x23) || (cmd == 0x20) || (cmd == 0x57) || (cmd == 0x48) 
-						|| (cmd == 0x43) || (cmd == 0x44) || (cmd == 0x56) || (cmd == 0x59)
-						|| (cmd == 0x5F) || (cmd == 0x60) || (cmd == 0x49))
-					{
-						swap16(&params[z].value);
-					}
                 }
 
                 sNode->subParams = params;
@@ -470,10 +461,6 @@ case 0x0065: /*REMASTER*/
                 for (z = 0; z < (int)sNode->num_parameters; z++){
                     params[z].type = SHORT_PARAM;
                     params[z].value = pShort[z];
-					if ((z == 0) && ((cmd == 0x24) || (cmd == 0x2D) || (cmd == 0x46) || (cmd == 0x50) || (cmd == 0x22)))
-						swap16(&params[z].value);
-					else if (z != 0)
-	                    swap16(&params[z].value);  //Word-swap for PSX
                 }
 
                 sNode->subParams = params;
@@ -526,8 +513,6 @@ case 0x0065: /*REMASTER*/
                 for (z = 0; z < (int)sNode->num_parameters; z++){
                     params[z].type = SHORT_PARAM;
                     params[z].value = pShort[z];
-					if (z != 0)
-                        swap16(&params[z].value);  
                 }
 
                 sNode->subParams = params;
@@ -577,9 +562,6 @@ case 0x0065: /*REMASTER*/
                 for (z = 0; z < (int)sNode->num_parameters; z++){
                     params[z].type = SHORT_PARAM;
                     params[z].value = pShort[z];
-
-					if ((cmd == 0x5C) && ( (z == 2) || (z >= 4) ) )
-                        swap16(&params[z].value); //Word-swap for PSX
                 }
 
                 sNode->subParams = params;
@@ -695,11 +677,9 @@ case 0x0062: /* REMASTER: 9 shorts, or is it variable and ends with FFFF + 1 mor
 
                 if (bytesToRead == 6){
                     params[1].value = *((unsigned int *)(&pShort[1]));
-                    //swap32(&params[1].value);  //No word-swap for PSX ??  Maybe?
                 }
                 else{  // 4 bytes
                     params[1].value = *((unsigned int *)(&pShort[0]));
-                    //swap32(&params[1].value);  //No word-swap for PSX ??  Maybe?
                 }
 
                 sNode->subParams = params;
@@ -729,7 +709,6 @@ case 0x0062: /* REMASTER: 9 shorts, or is it variable and ends with FFFF + 1 mor
 				/* Variable Arguments to read */
                 for (z = 0; z < 30; z++){
 					fread(&tarray[z], 2, 1, inFile);
-                    swap16(&tarray[z]); //Word-swap, assume LE?
 
 //					printf("TARRAYZ = 0x%X\n",tarray[z]);
 					if( (tarray[z] == 0x01F9) || (tarray[z] == 0x00F9) || (tarray[z] == 0xF900) || (tarray[z] == 0x03F9) || (tarray[z] == 0x07F9)) {
@@ -768,7 +747,6 @@ case 0x0062: /* REMASTER: 9 shorts, or is it variable and ends with FFFF + 1 mor
                 for (z = 0; z < (int)sNode->num_parameters; z++){
                     params[z].type = SHORT_PARAM;
                     params[z].value = tarray[z];
-//                    swap16(&params[z].value); //Word-swap, assume LE?
                 }
 
                 sNode->subParams = params;
@@ -827,18 +805,15 @@ case 0x0062: /* REMASTER: 9 shorts, or is it variable and ends with FFFF + 1 mor
                 /* Fill in EXE Parameters */
                 params[0].type = SHORT_PARAM;
                 params[0].value = pShort[0];
-                //swap16(&params[0].value); //No swap for PSX
                 params[1].type = ALIGN_4_PARAM;
                 params[1].value = 0x00;
                 params[2].type = LONG_PARAM;
 
                 if (bytesToRead == 6){
                     params[2].value = *((unsigned int *)(&pShort[1]));
-                    //swap32(&params[2].value);  //No word-swap for PSX ??  Maybe?
                 }
                 else{  // == 8
                     params[2].value = *((unsigned int *)(&pShort[2]));
-                    //swap32(&params[2].value);  //No word-swap for PSX ??  Maybe?
                 }
 
                 sNode->subParams = params;
@@ -876,7 +851,6 @@ case 0x0062: /* REMASTER: 9 shorts, or is it variable and ends with FFFF + 1 mor
                 /* Determine # of Arguments to read */
                 fread(&pdata[numArg * 2], 2, 1, inFile);
                 memcpy(&val, &pdata[numArg * 2], sizeof(short));
-                swap16(&val);  //No swap required for PSX
                 if ((val & (short)0xFF00) == (short)0x0000)
                     totalNumArg = 6;
                 else
@@ -914,7 +888,6 @@ case 0x0062: /* REMASTER: 9 shorts, or is it variable and ends with FFFF + 1 mor
                 for (z = 0; z < (int)sNode->num_parameters; z++){
                     params[z].type = SHORT_PARAM;
                     params[z].value = pShort[z];
-                    swap16(&params[z].value);     
                 }
 
                 sNode->subParams = params;
@@ -972,11 +945,9 @@ case 0x0062: /* REMASTER: 9 shorts, or is it variable and ends with FFFF + 1 mor
                 }
 
                 /* Fill in EXE Parameters */
-	//			swap16(&pdata[0]);  //swap back
                 for (z = 0; z < (int)sNode->num_parameters; z++){
                     params[z].type = SHORT_PARAM;
                     params[z].value = pShort[z];
-                    swap16(&params[z].value);  //PSX does not need swap
                 }
 
                 sNode->subParams = params;
@@ -1086,7 +1057,6 @@ case 0x0062: /* REMASTER: 9 shorts, or is it variable and ends with FFFF + 1 mor
                 for (z = 0; z < (int)sNode->num_parameters; z++){
                     params[z].type = SHORT_PARAM;
                     params[z].value = pShort[z]; 
-                    swap16(&params[z].value);   
                 }
 
                 sNode->subParams = params;
@@ -1153,7 +1123,6 @@ case 0x0062: /* REMASTER: 9 shorts, or is it variable and ends with FFFF + 1 mor
                 for (z = 0; z < (int)sNode->num_parameters; z++){
                     params[z].type = SHORT_PARAM;
                     params[z].value = pShort[z];
-                    //swap16(&params[z].value);  //PSX does not need
                 }
 
                 sNode->subParams = params;
@@ -1218,7 +1187,6 @@ case 0x0062: /* REMASTER: 9 shorts, or is it variable and ends with FFFF + 1 mor
                 for (z = 0; z < (int)sNode->num_parameters; z++){
                     params[z].type = SHORT_PARAM;
                     params[z].value = pShort[z];
-                    //swap16(&params[z].value); //Skip for PSX
                 }
 
                 sNode->subParams = params;
@@ -1299,9 +1267,6 @@ case 0x0062: /* REMASTER: 9 shorts, or is it variable and ends with FFFF + 1 mor
                 for (z = 0; z < (int)sNode->num_parameters; z++){
                     params[z].type = SHORT_PARAM;
                     params[z].value = pShort[z];
-					//if (cmd != 0x1A){
-						swap16(&params[z].value);
-					//}
                 }
 
                 sNode->subParams = params;
@@ -1351,7 +1316,7 @@ case 0x0062: /* REMASTER: 9 shorts, or is it variable and ends with FFFF + 1 mor
                     printf("Conversion Error\n");
                     break;
                 }
-//				printf("\n%s\n", pOut);
+				printf("\n%s\n", pOut);
 
 
 				location += bytesRead;
@@ -1431,11 +1396,9 @@ case 0x0062: /* REMASTER: 9 shorts, or is it variable and ends with FFFF + 1 mor
 
                 /* Offset to Opt2 Jump Point */
                 fread(&opt2Offset, 2, 1, inFile);
-                //swap16(&opt2Offset);
 
                 /* NULL - well, not really NULL in all cases */
                 fread(&parameter2, 2, 1, inFile);
-                swap16(&parameter2);
                 index = 0;
 
                 /******************************/
@@ -1565,10 +1528,8 @@ case 0x0062: /* REMASTER: 9 shorts, or is it variable and ends with FFFF + 1 mor
                 //Read short jump parameter
                 fread(&pdata[numArg], 2, 1, inFile);
                 memcpy(&wdOffset, &pdata[numArg], 2);
-                //swap16(&wdOffset);  //Skip swap for PSX
                 numArg += 2;
 
-//Byte ARGs.  Check to see if they need to be swapped
                 /* Determine # of Arguments to read */
                 while (!feof(inFile)){
                     fread(&pdata[numArg], 1, 1, inFile);
@@ -1609,8 +1570,6 @@ case 0x0062: /* REMASTER: 9 shorts, or is it variable and ends with FFFF + 1 mor
                 for (z = 0; z < (int)sNode->num_parameters; z++){
                     params[z].type = SHORT_PARAM;
                     params[z].value = pShort[z];
-					if (z > 0)
-                        swap16(&params[z].value);   //PSX swapping
                 }
 
                 sNode->subParams = params;
@@ -1642,7 +1601,6 @@ case 0x0062: /* REMASTER: 9 shorts, or is it variable and ends with FFFF + 1 mor
 
                 fread(&pdata[numArg], 2, 1, inFile);
                 memcpy(&wdOffset, &pdata[numArg], 2);
-                //swap16(&wdOffset);  
                 numArg += 2;
 
 
@@ -1686,8 +1644,6 @@ case 0x0062: /* REMASTER: 9 shorts, or is it variable and ends with FFFF + 1 mor
                 for (z = 0; z < (int)sNode->num_parameters; z++){
                     params[z].type = SHORT_PARAM;
                     params[z].value = pShort[z];
-					if (z > 0)
-                        swap16(&params[z].value);  //PSX swap
                 }
 
                 sNode->subParams = params;
@@ -1722,17 +1678,14 @@ case 0x0062: /* REMASTER: 9 shorts, or is it variable and ends with FFFF + 1 mor
 
                 fread(&pShort[numArg], 2, 1, inFile);
                 memcpy(&wdOffset, &pShort[numArg++], 2);
-                //swap16(&wdOffset);   //NOT FOR PSX
                 fread(&pShort[numArg], 2, 1, inFile);
                 memcpy(&bitOffset, &pShort[numArg++], 2);
-                //swap16(&bitOffset);  //NOT FOR PSX
                 zeroOffset = bitOffset;
 
                 //Look for 0x0000 Terminator
                 while (zeroOffset != 0x0000){
                     fread(&pShort[numArg], 2, 1, inFile);
                     memcpy(&zeroOffset, &pShort[numArg++], 2);
-                    //swap16(&zeroOffset);    //NOT FOR PSX
                 }
 
                 /* Create a new script node */
@@ -1759,7 +1712,6 @@ case 0x0062: /* REMASTER: 9 shorts, or is it variable and ends with FFFF + 1 mor
                 for (z = 0; z < (int)sNode->num_parameters; z++){
                     params[z].type = SHORT_PARAM;
                     params[z].value = pShort[z];
-                    //swap16(&params[z].value);     //NOT FOR PSX
                 }
 
                 sNode->subParams = params;
@@ -1801,7 +1753,6 @@ case 0x0062: /* REMASTER: 9 shorts, or is it variable and ends with FFFF + 1 mor
                 fread(&pdata[0], 2, 3, inFile);
 
                 memcpy(&jmploc, &pdata[0], 2);
-				swap16(&pdata[0]);
 
                 /* See if an additional 5 should be read */
                 if (pdata[2] == (char)0x00){
@@ -1838,7 +1789,6 @@ case 0x0062: /* REMASTER: 9 shorts, or is it variable and ends with FFFF + 1 mor
                 for (z = 0; z < (int)sNode->num_parameters; z++){
                     params[z].type = SHORT_PARAM;
                     params[z].value = pShort[z];
-                    swap16(&params[z].value);   
                 }
 
                 sNode->subParams = params;
