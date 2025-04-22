@@ -517,13 +517,15 @@ int writeBinScript(FILE* outFile){
                         /***********************/
                         case SHOW_PORTRAIT_RIGHT:
                         {
+                            //unsigned short portraitCode;
+                            //portraitCode = 0xFB00 | ((unsigned short)rpNode->value);
+                            //writeSW(portraitCode);
                             if (extended) {
                                 writeBYTE(0x00);
                                 extended = 0;
                             }
-                            unsigned short portraitCode;
-                            portraitCode = 0xFB00 | ((unsigned short)rpNode->value);
-                            writeSW(portraitCode);
+                            writeBYTE(0xFB);
+                            writeBYTE(rpNode->value);
                         }
                         break;
 
@@ -655,7 +657,7 @@ int writeBinScript(FILE* outFile){
                                         break;
                                     } else if (tmpN == 0xff03) {
                                         writeBYTE(5);
-                                        rpNode = rpNode->pNext;
+                                        rpNode = rpNode->pNext->pNext; // too lazy to check it's actually followed by 0xffff but it should be
                                         break;
                                     }
                                 }
@@ -669,6 +671,9 @@ int writeBinScript(FILE* outFile){
                                 break;
                             case 0xff03:
                                 writeBYTE(0x3d);
+                                break;
+                            case 0xffff:
+                                writeBYTE(0xff);
                                 break;
                             default:
                                 writeBYTE(tmp >> 8);

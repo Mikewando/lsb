@@ -2459,26 +2459,26 @@ runParamType* getRunParam(int textMode, char* pdata){
 					/* Force 2-Byte Alignment */
 					/**************************/
 					
-					///* Create a runcmds parameter element */
-					//rpNode = (runParamType*)malloc(sizeof(runParamType));
-					//if (rpNode == NULL){
-					//	printf("Error allocing space for run parameter struct.\n");
-					//	return NULL;
-					//}
-					//memset(rpNode, 0, sizeof(runParamType));
-					//rpNode->pNext = NULL;
-					//rpNode->str = NULL;
-					//rpNode->type = ALIGN_2_PARAM;
-					//rpNode->value = 0x0;
+					/* Create a runcmds parameter element */
+					rpNode = (runParamType*)malloc(sizeof(runParamType));
+					if (rpNode == NULL){
+						printf("Error allocing space for run parameter struct.\n");
+						return NULL;
+					}
+					memset(rpNode, 0, sizeof(runParamType));
+					rpNode->pNext = NULL;
+					rpNode->str = NULL;
+					rpNode->type = ALIGN_2_PARAM;
+					rpNode->value = 0x00;
 					
-					///* Add the node to the list */
-					//if (rpHead == NULL){
-					//	rpHead = rpCurrent = rpNode;
-					//}
-					//else{
-					//	rpCurrent->pNext = rpNode;
-					//	rpCurrent = rpNode;
-					//}
+					/* Add the node to the list */
+					if (rpHead == NULL){
+						rpHead = rpCurrent = rpNode;
+					}
+					else{
+						rpCurrent->pNext = rpNode;
+						rpCurrent = rpNode;
+					}
 					
                     break;
                 }

@@ -253,8 +253,8 @@ int convertPSXText(char* strIn, char** strOut, int len, int* lenOut){
 				ptarget[out_offset++] = 0x00;
 				ptarget[out_offset++] = 0xFF;
 				ptarget[out_offset++] = 0x03;
-				//ptarget[out_offset++] = 0xFF;
-				//ptarget[out_offset++] = 0xFF;
+				ptarget[out_offset++] = 0xFF;
+				ptarget[out_offset++] = 0xFF;
 				offset++;
 				break;
 			}
