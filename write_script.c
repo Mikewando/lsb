@@ -534,13 +534,18 @@ int writeBinScript(FILE* outFile){
                         /**************/
                         case TIME_DELAY:
                         {
+                            //unsigned short timedelay;
+                            //timedelay = 0xF800 | ((unsigned short)rpNode->value);
+                            //writeSW(timedelay);
                             if (extended) {
                                 writeBYTE(0x00);
                                 extended = 0;
                             }
-                            unsigned short timedelay;
-                            timedelay = 0xF800 | ((unsigned short)rpNode->value);
-                            writeSW(timedelay);
+                            writeBYTE(0xF8);
+                            writeBYTE(rpNode->value);
+                            // Enable and disable extended?
+                            writeBYTE(0x0E);
+                            writeBYTE(0x00);
                         }
                             break;
 
@@ -653,6 +658,10 @@ int writeBinScript(FILE* outFile){
                                     unsigned short tmpN = (unsigned short)rpNode->pNext->value;
                                     if (tmpN == 0xff01) {
                                         writeBYTE(0x0b);
+                                        if (extended) {
+                                            writeBYTE(0x00);
+                                            extended = 0;
+                                        }
                                         rpNode = rpNode->pNext;
                                         break;
                                     } else if (tmpN == 0xff03) {
@@ -670,6 +679,16 @@ int writeBinScript(FILE* outFile){
                                 writeBYTE(0x21);
                                 break;
                             case 0xff03:
+                                // FIXME oof, would prefer to avoid this back and forth translation for psx/remaster
+                                if (rpNode->pNext && rpNode->pNext->type == CTRL_CODE) {
+                                    unsigned short tmpN = (unsigned short)rpNode->pNext->value;
+                                    if (tmpN == 0xffff) {
+                                        writeBYTE(0x03);
+                                        writeBYTE(0xff);
+                                        rpNode = rpNode->pNext;
+                                        break;
+                                    }
+                                }
                                 writeBYTE(0x3d);
                                 break;
                             case 0xffff:
