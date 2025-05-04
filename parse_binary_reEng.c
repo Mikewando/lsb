@@ -1316,7 +1316,7 @@ case 0x0062: /* REMASTER: 9 shorts, or is it variable and ends with FFFF + 1 mor
                     printf("Conversion Error\n");
                     break;
                 }
-				printf("\n%s\n", pOut);
+//				printf("\n%s\n", pOut);
 
 
 				location += bytesRead;
