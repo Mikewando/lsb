@@ -88,7 +88,7 @@ int decodeBinaryScript_RE_Eng(FILE* inFile, FILE* outFile){
     /*********************************************/
     if (parseCmdSeq_RE_Eng(0x0800, &inFile, 0) != 0){
         printf("Error Detected while reading from input file.\n");
-        return -1;
+        //return -1;
     }
 
     /* Allocate memory for the array */
@@ -851,7 +851,7 @@ case 0x0062: /* REMASTER: 9 shorts, or is it variable and ends with FFFF + 1 mor
                 /* Determine # of Arguments to read */
                 fread(&pdata[numArg * 2], 2, 1, inFile);
                 memcpy(&val, &pdata[numArg * 2], sizeof(short));
-                if ((val & (short)0xFF00) == (short)0x0000)
+                if ((val & (short)0x00FF) == (short)0x0000)
                     totalNumArg = 6;
                 else
                     totalNumArg = 1;
@@ -1845,6 +1845,8 @@ case 0x0062: /* REMASTER: 9 shorts, or is it variable and ends with FFFF + 1 mor
             /**************************************/
             default:
             {
+                printf("id: %04x\n", sNode->id);
+
 				printf("CMD = 0x%X  Offset= 0x%X (0x%X short)\n", (unsigned int)cmd, offset, offset / 2);
                 printf("ERROR, Unknown Command 0x%X!\n", cmd);
                 return -1;
