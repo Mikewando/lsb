@@ -711,7 +711,7 @@ case 0x0062: /* REMASTER: 9 shorts, or is it variable and ends with FFFF + 1 mor
 					fread(&tarray[z], 2, 1, inFile);
 
 //					printf("TARRAYZ = 0x%X\n",tarray[z]);
-					if( (tarray[z] == 0x01F9) || (tarray[z] == 0x00F9) || (tarray[z] == 0xF900) || (tarray[z] == 0x03F9) || (tarray[z] == 0x07F9)) {
+					if( (tarray[z] == 0x00F9) || (tarray[z] == 0xF900) || (tarray[z] == 0xF901) || (tarray[z] == 0xF903) || (tarray[z] == 0xF907)) {
 						found = 1;
 //						printf("FOUND, BREAK\n");
 						break;
@@ -1311,12 +1311,12 @@ case 0x0062: /* REMASTER: 9 shorts, or is it variable and ends with FFFF + 1 mor
                 nbytes = rval;
 
 
-//				printf("Parsing Text at 0x%X\n",location);
+				printf("Parsing Text at 0x%X\n",location);
                 if ((bytesRead = convertPSXText(buf, &pOut, nbytes, &lout)) < 0){
                     printf("Conversion Error\n");
                     break;
                 }
-//				printf("\n%s\n", pOut);
+				printf("\n%s\n", pOut);
 
 
 				location += bytesRead;

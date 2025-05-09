@@ -121,7 +121,7 @@ int releasePSXStringTable(){
 int getPSXComprStr(int compressionIndex, char* target, int* tlen){
 
 	if (compressionIndex >= G_NumPSXTableEntries){
-		printf("Invalid index in getPSXComprStr\n");
+		printf("#####Invalid index (0x%X) in getPSXComprStr\n", compressionIndex);
 		return -1;
 	}
 	else{
