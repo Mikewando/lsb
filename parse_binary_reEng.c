@@ -1311,12 +1311,12 @@ case 0x0062: /* REMASTER: 9 shorts, or is it variable and ends with FFFF + 1 mor
                 nbytes = rval;
 
 
-				printf("Parsing Text at 0x%X\n",location);
+				//printf("Parsing Text at 0x%X\n",location);
                 if ((bytesRead = convertPSXText(buf, &pOut, nbytes, &lout)) < 0){
                     printf("Conversion Error\n");
                     break;
                 }
-				printf("\n%s\n", pOut);
+				//printf("\n%s\n", pOut);
 
 
 				location += bytesRead;
