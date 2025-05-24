@@ -719,77 +719,12 @@ int writeBinScript(FILE* outFile){
             case NODE_OPTIONS:
             {
                 runParamType* rpNode = NULL;
-                int numBytes = 0;
-
-                /* Check that operation can be completed */
-                numBytes += 6; /* At least need to output subroutine code & 2 param */
-                
-                for (x = 0; x < 2; x++){
-                    if (x == 0)
-                        rpNode = pNode->runParams;
-                    else
-                        rpNode = pNode->runParams2;
-                    while (rpNode != NULL) {
-
-                        switch (rpNode->type){
-
-                        case ALIGN_2_PARAM:
-                            numBytes++; /* overestimate for simplicity */
-                            break;
-                        case ALIGN_4_PARAM:
-                            numBytes += 3; /* overestimate for simplicity */
-                            break;
-                        case PRINT_LINE:
-                        {
-                            int numBytes2, numBytes3;
-                            unsigned char* pText = rpNode->str;
-                            numBytes2 = numBytes3 = 0;
-                            while (*pText != '\0'){
-
-                                /* Read in a utf8 character */
-                                numBytes3 = numBytesInUtf8Char((unsigned char)*pText);
-
-                                /* Look up associated code */
-                                if ((numBytes3 == 1) && (*pText == ' ')){
-                                    numBytes2 += 2; /* Space */
-                                }
-                                else{
-                                    if (G_table_mode == ONE_BYTE_ENC){
-                                        //Fix estimation later or ignore assuming there will be enough space
-                                        //numBytes2++;
-                                    }
-                                    else if (G_table_mode == TWO_BYTE_ENC){
-                                        numBytes2 += 2;
-                                    }
-                                    else{   //Straight UTF-8 Encoding
-                                        numBytes2 += numBytes3;
-                                    }
-                                }
-                                pText += numBytes3;
-                            }
-                            numBytes += numBytes2;
-                        }
-                            break;
-                        case CTRL_CODE:
-                            numBytes += 2;
-                            break;
-                        default:
-                            printf("Error, bad run cmd parameter detected.\n");
-                            return -1;
-                        }
-
-                        rpNode = rpNode->pNext;
-                    }
-                }
-                if ((numBytes + offset) > max_size_bytes){
-                    printf("Error, subroutine 0007 would extend beyond max file size.\n");
-                    return -1;
-                }
-
                 pNode->fileOffset = offset;  //Book keeping
+                int extended = 0;
 
                 /* This is all part of subroutine code 0x0007 */
-                writeSW(0x0007);
+                writeBYTE(0x07);
+                writeBYTE(0x00);
                 writeSW(pNode->subParams[0].value);
                 writeSW(pNode->subParams[1].value);
 
@@ -833,36 +768,9 @@ int writeBinScript(FILE* outFile){
                             {
                                 unsigned char* pText = rpNode->str;
 
-                                /* BPE EDIT HERE */
-                                if (G_table_mode == ONE_BYTE_ENC){
-                                    int x;
-                                    unsigned int comprSizeBytes;
-                                    utf8Text_to_8bit_binary((char*)pText, &comprSizeBytes);
-
-									/*************************************************/
-									/* Dont bother compression Options, not worth it */
-									/*************************************************/
-#if 0
-                                    compressBPE(pText, &comprSizeBytes);
-                                    for(x = 0; x < (int)comprSizeBytes; x++){
-                                        /* Write the code to the output file */
-                                        if (*pText == ' '){
-                                            writeSW(0xF905); /* Space */
-                                        }
-                                        else
-                                            writeBYTE(pText[x]);
-                                    }
-#else
-									for(x = 0; x < (int)comprSizeBytes; x++){
-                                        /* Write the code to the output file */
-                                        if (pText[x] == ' '){
-                                            writeSW(0xF905);
-                                        }
-                                        else
-                                            writeSW((unsigned short)(pText[x]));
-                                    }
-#endif									
-                                    break;
+                                if (G_table_mode == COMP_ENG && !extended) {
+                                    writeBYTE(0x0E);
+                                    extended = 1;
                                 }
 
                                 while (*pText != '\0'){
@@ -877,9 +785,10 @@ int writeBinScript(FILE* outFile){
                                     memcpy(tmp, pText, numBytes);
 
                                     /* Look up associated code */
-                                    if ((numBytes == 1) && (*pText == ' ')){
-                                        writeSW(0xF905); /* Space */
-                                    }
+                                    //if ((numBytes == 1) && (*pText == ' ')){
+                                    //    writeSW(0xF905); /* Space */
+                                    //}
+                                    if (0) {}
                                     else{
                                         if (G_table_mode == ONE_BYTE_ENC){
                                             if (getUTF8code_Byte(tmp, &code) < 0){
@@ -901,6 +810,15 @@ int writeBinScript(FILE* outFile){
                                             writeSW(scode);
                                         }
 
+                                        else if (G_table_mode == COMP_ENG){
+                                            int z;
+
+                                            /* Write the data to the output file */
+                                            for (z = 0; z < numBytes; z++){
+                                                writeBYTE(tmp[z] - 0x1F);
+                                            }
+                                        }
+
                                         else{   //Straight UTF-8 Encoding
                                             int z;
 
@@ -919,7 +837,23 @@ int writeBinScript(FILE* outFile){
                             /* control-code */
                             /****************/
                             case CTRL_CODE:
-                                writeSW((unsigned short)rpNode->value);
+                                unsigned short tmp = (unsigned short)rpNode->value;
+                                //printf("%#06x\n", tmp);
+
+                                switch (tmp)
+                                {
+                                case 0xffff:
+                                    if (extended) {
+                                        writeBYTE(0x00);
+                                        extended = 0;
+                                    }
+                                    writeBYTE(0xff);
+                                    break;
+                                default:
+                                    writeBYTE(tmp >> 8);
+                                    writeBYTE(tmp);
+                                    break;
+                                }
                                 break;
 
 
